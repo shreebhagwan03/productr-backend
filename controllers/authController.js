@@ -2,7 +2,6 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { validateAuth } from "../utils/validateAuth.js";
-import sendOtp from "../utils/sendOtp.js";
 
 /* ================= OTP GENERATOR ================= */
 const generateOtp = () =>
@@ -50,13 +49,18 @@ export const registerUser = async (req, res) => {
       password: hashed,
     });
 
-    res.json({ success: true, message: "Registered successfully" });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
 /* ================= LOGIN / RESEND OTP ================= */
+/**
+ * SAME API:
+ * - First login
+ * - Resend OTP
+ */
 export const loginUser = async (req, res) => {
   try {
     const { email, mobile, password } = req.body;
@@ -70,7 +74,7 @@ export const loginUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // password check only first time
+    // password check only first time (optional but recommended)
     if (password) {
       const match = await bcrypt.compare(password, user.password);
       if (!match) {
@@ -78,16 +82,14 @@ export const loginUser = async (req, res) => {
       }
     }
 
-    // GENERATE OTP
+    // 🔥 IMPORTANT PART
+    // Old OTP overwrite ho jaayega (invalidate automatically)
     const otp = generateOtp();
-
     user.otp = otp;
+    user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 min
     await user.save();
 
-    // SEND EMAIL OTP
-    if (user.email) {
-      await sendOtp(user.email, otp);
-    }
+    console.log("OTP:", otp); // SMS / EMAIL integration
 
     res.json({
       success: true,
@@ -106,16 +108,11 @@ export const verifyOtp = async (req, res) => {
 
     const user = await User.findById(userId);
 
-    if (!user || !user.otp) {
-      return res.status(400).json({ message: "Invalid request" });
-    }
-
-    // ✅ INVALID OTP
     if (user.otp !== otp) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    // CLEAR OTP
+    // ✅ OTP VERIFIED → CLEAR
     user.otp = null;
     user.otpExpiry = null;
     await user.save();
