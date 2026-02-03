@@ -10,7 +10,7 @@ const generateOtp = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
 
-/* ================= SEND OTP ================= */
+/*SEND OTP*/
 router.post("/send-otp", async (req, res) => {
   try {
     const { email, mobile, password, type } = req.body;
@@ -29,7 +29,7 @@ router.post("/send-otp", async (req, res) => {
 
     let user = await User.findOne(query);
 
-    /* ===== LOGIN ===== */
+    /*  LOGIN  */
     if (type === "login") {
       if (!user)
         return res.status(404).json({ message: "User not found" });
@@ -39,7 +39,7 @@ router.post("/send-otp", async (req, res) => {
         return res.status(401).json({ message: "Wrong password" });
     }
 
-    /* ===== SIGNUP ===== */
+    /* SIGNUP*/
     if (type === "signup") {
       if (user)
         return res.status(400).json({ message: "User already exists" });
@@ -53,13 +53,13 @@ router.post("/send-otp", async (req, res) => {
       });
     }
 
-    /* ===== GENERATE OTP ===== */
+    /*GENERATE OTP  */
     const otp = generateOtp();
 
     user.otp = otp;   
     await user.save();
 
-    /* ===== SEND EMAIL ===== */
+    /* SEND EMAIL */
     if (email) {
       await sendOtp(email, otp);
     }
@@ -72,7 +72,7 @@ router.post("/send-otp", async (req, res) => {
 });
 
 
-/* ================= VERIFY OTP ================= */
+/*  VERIFY OTP */
 router.post("/verify-otp", async (req, res) => {
   try {
     const { email, mobile, otp } = req.body;

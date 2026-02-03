@@ -3,11 +3,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { validateAuth } from "../utils/validateAuth.js";
 
-/* ================= OTP GENERATOR ================= */
+/* OTP GENERATOR */
 const generateOtp = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
-/* ================= REGISTER ================= */
+/*  REGISTER */
 export const registerUser = async (req, res) => {
   try {
     const error = validateAuth(req.body);
@@ -94,7 +94,7 @@ export const loginUser = async (req, res) => {
   }
 };
 
-/* ================= VERIFY OTP ================= */
+/*VERIFY OTP  */
 export const verifyOtp = async (req, res) => {
   try {
     const { userId, otp } = req.body;
