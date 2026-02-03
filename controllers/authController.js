@@ -55,12 +55,7 @@ export const registerUser = async (req, res) => {
   }
 };
 
-/* ================= LOGIN / RESEND OTP ================= */
-/**
- * SAME API:
- * - First login
- * - Resend OTP
- */
+
 export const loginUser = async (req, res) => {
   try {
     const { email, mobile, password } = req.body;
@@ -74,7 +69,7 @@ export const loginUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // password check only first time (optional but recommended)
+    // password check only first time 
     if (password) {
       const match = await bcrypt.compare(password, user.password);
       if (!match) {
@@ -82,14 +77,12 @@ export const loginUser = async (req, res) => {
       }
     }
 
-    // 🔥 IMPORTANT PART
-    // Old OTP overwrite ho jaayega (invalidate automatically)
+
     const otp = generateOtp();
     user.otp = otp;
-    user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 min
     await user.save();
 
-    console.log("OTP:", otp); // SMS / EMAIL integration
+    console.log("OTP:", otp); 
 
     res.json({
       success: true,
@@ -112,12 +105,12 @@ export const verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    // ✅ OTP VERIFIED → CLEAR
+    //  OTP VERIFIED → CLEAR
     user.otp = null;
     user.otpExpiry = null;
     await user.save();
 
-    // 🔐 JWT TOKEN
+    // JWT TOKEN
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
